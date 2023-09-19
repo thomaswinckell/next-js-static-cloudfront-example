@@ -1,4 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
+Description: Deploy a static website using S3 and CloudFront
 
 Parameters:
   DomainName:
@@ -8,15 +9,18 @@ Parameters:
 
 Resources:
 
+  # The S3 bucket that will receive the app static files
   NextBucket:
     Type: AWS::S3::Bucket
 
+  # Origin access identity (OAI) that will be used by the policy to allow CloudFront to access the S3 bucket
   NextOriginAccessIdentity:
     Type: AWS::CloudFront::CloudFrontOriginAccessIdentity
     Properties:
       CloudFrontOriginAccessIdentityConfig:
         Comment: Origin Access Identity for Next static resources in S3 bucket
 
+  # Policy allowing CloudFront to get objects from the S3 bucket
   NextBucketPolicy:
     Type: AWS::S3::BucketPolicy
     Properties:
@@ -32,6 +36,7 @@ Resources:
               CanonicalUser: !GetAtt NextOriginAccessIdentity.S3CanonicalUserId
             Resource: !Sub arn:aws:s3:::${NextBucket}/*
 
+  # A custom cache policy for our static files : minimum 1 minute of caching, max 1 year
   NextServerCachePolicy:
     Type: AWS::CloudFront::CachePolicy
     Properties:
@@ -50,6 +55,7 @@ Resources:
           EnableAcceptEncodingBrotli: true
           EnableAcceptEncodingGzip: true
 
+  # The CloudFront Distribution
   Distribution:
     Type: AWS::CloudFront::Distribution
     DependsOn:
@@ -66,12 +72,13 @@ Resources:
         HttpVersion: http2and3
         DefaultRootObject: 'index'
         CustomErrorResponses:
+          # when there's a 403 error in the S3 origin, it means that the file is not found
           - ErrorCode: 403
             ResponseCode: 404
             ResponsePagePath: /404
         DefaultCacheBehavior:
           TargetOriginId: next-s3-origin
-          CachePolicyId: !Ref NextServerCachePolicy
+          CachePolicyId: !Ref NextServerCachePolicy # we're using our custom cache policy
           ForwardedValues:
             QueryString: false
             Cookies:
@@ -88,6 +95,7 @@ Resources:
         Aliases:
           - !Ref DomainName
 
+  # Alias from our domain name to the CloudFront distribution
   DNSName:
     Type: AWS::Route53::RecordSetGroup
     Properties:

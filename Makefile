@@ -44,16 +44,16 @@ deploy:
 # Upload build to S3
 upload-s3:
 	$(eval bucket := $(call get_stack_output, NextBucket))
-	# sync next static folder
+	# sync next static folder ; set 1 year cache as filenames contains a hash
 	aws s3 sync ./out/_next s3://$(bucket)/_next/ \
  		--metadata-directive REPLACE \
         --cache-control max-age=31536000,public
-	# copy assets (excluding html and next folder)
+	# copy assets (excluding html and next folder) ; set no-cache, minimum CloudFront Cache will apply
 	aws s3 cp ./out s3://$(bucket)/ \
 		--recursive \
 		--exclude "_next/*" \
 		--exclude "*.html" \
 		--metadata-directive REPLACE \
 		--cache-control max-age=0,no-cache,no-store,must-revalidate
-	# copy html files without .html extension
+	# copy html files without .html extension ; set no-cache, minimum CloudFront Cache will apply
 	cd ./out && find * -type f -name "*.html" -exec sh -c 'aws s3 cp "./$$0" s3://$(bucket)/"$${0%.html}" --metadata-directive REPLACE --content-type text/html --cache-control max-age=0,no-cache,no-store,must-revalidate' {} \;
