@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Deploy a certificate for CloudFront to validate the domain ownership
+Description: Deploy a certificate for CloudFront to trust the domain ownership
 
 Parameters:
   DomainName:
