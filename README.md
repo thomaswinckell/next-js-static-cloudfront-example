@@ -20,7 +20,7 @@ This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-opti
 
 ## Deploy
 
-To deploy everything from scratch, you should override the variables on top and then you can run the commands in this order :
+To deploy everything from scratch, you should override the variables on top of the Makefile and then you can run the commands in this order :
 
 ```bash
 make build
